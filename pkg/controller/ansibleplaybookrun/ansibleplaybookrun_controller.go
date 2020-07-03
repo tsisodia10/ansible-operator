@@ -87,7 +87,13 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	reqLogger.Info("Reconciling AnsiblePlaybookRun")
 
 	// Fetch the AnsiblePlaybookRun instance
-	instance := &ansiblev1.AnsiblePlaybookRun{}
+	ap := &ansiblev1.AnsiblePlaybook{}
+	apr := &ansiblev1.AnsiblePlaybookRun{}
+
+	ap.initialize()
+	apr.Initialize()
+
+
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -100,37 +106,56 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	r.Validate(ap)
+	
+	// Define a new Job object
+	job := AnsiblePlaybookRunJob(apr)
 
 	// Set AnsiblePlaybookRun instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, job, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	// Check if this Job already exists
+	found := &corev1.Job{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: job.Name, Namespace: job.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+		reqLogger.Info("Creating a new Job", "Job.Namespace", job.Namespace, "Job.Name", job.Name)
 		err = r.client.Create(context.TODO(), pod)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully - don't requeue
+		// Job created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	// Job already exists - don't requeue
+	reqLogger.Info("Skip reconcile: Job already exists", "Job.Namespace", found.Namespace, "Job.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
+func (r *ReconcileANsiblePlaybookRun) Validate(cr *ansiblev1.AnsiblePlaybook) error{
+	repoType := cr.Spec.RepositoryType
+	repoURL := cr.Spec.RepositoryURL
+
+	if repoType == "git"{
+	    if repoURL == “http” || repoURL == “https” || repoURL == ”ssh”
+             {
+                 return reconcile.Result{}, nil
+             }
+             reqLogger.Info("FAILED")
+	   }
+	   
+}
+
+
+
+
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *ansiblev1.AnsiblePlaybookRun) *corev1.Pod {
+func newPodForCR(cr *ansiblev1.AnsiblePlaybookRun) *corev1.Job {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
@@ -147,7 +172,82 @@ func newPodForCR(cr *ansiblev1.AnsiblePlaybookRun) *corev1.Pod {
 					Image:   "busybox",
 					Command: []string{"sleep", "3600"},
 				},
+				VolumeMounts: []corev1.VolumeMount{
+					corev1.VolumeMount{
+						Name: "extravars-volume",
+						MountPath: "/runner/env/extravars",
+				},
+				corev1.VolumeMount{
+					Name: "password-volume",
+					MountPath: "/runner/env/password",
+				},
+				corev1.VolumeMount{
+					Name: "sshkey-volume",
+					MountPath: "/runner/env/ssh_key",
+				},
+				corev1.VolumeMount{
+					Name: "inventory-volume",
+					MountPath: "/runner/inventory/hosts",
+				},
+				corev1.VolumeMount{
+					Name: "projectvars-volume",
+					MountPath: "/runner/project/roles/testrole/vars",
+				},
+				corev1.VolumeMount{
+					Name: "projectmeta-volume",
+					MountPath: "/runner/project/roles/testrole/meta",
+				},
+
 			},
 		},
-	}
+		Volumes: []corev1.Volume{
+			corev1.Volume{
+				Name: "extravars-volume",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: corev1.HostPathVolumeSource{
+						Path: "/data",
+					},
+				},
+			},
+			corev1.Volume{
+				Name: "password-volume",
+				VolumeSource: v1beta1.VolumeSource{
+						HostPath: &v1beta1.HostPathVolumeSource{
+								Path: "/data",
+						},
+				},
+			},
+			corev1.Volume{
+				Name: "sshkey-volume",
+				VolumeSource: v1beta1.VolumeSource{
+						HostPath: &v1beta1.HostPathVolumeSource{
+								Path: "/data",
+						},
+				},
+			},
+			corev1.Volume{
+				Name: "inventory-volume",
+				VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+						},
+				},
+			},
+			corev1.Volume{
+				Name: "projectvars-volume",
+				VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+						},
+				},
+			},
+			corev1.Volume{
+				Name: "projectmeta-volume",
+				VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+						},
+				},
+		    },
+		},			
 }
