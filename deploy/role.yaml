@@ -70,6 +70,7 @@ rules:
   - ansible.konveyor.io
   resources:
   - '*'
+  - ansibleplaybookruns
   verbs:
   - create
   - delete
