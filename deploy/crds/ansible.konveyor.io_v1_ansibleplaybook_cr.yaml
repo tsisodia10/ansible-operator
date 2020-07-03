@@ -1,0 +1,7 @@
+apiVersion: ansible.konveyor.io/v1
+kind: AnsiblePlaybook
+metadata:
+  name: example-ansibleplaybook
+spec:
+  # Add fields here
+  size: 3
