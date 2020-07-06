@@ -6,6 +6,7 @@ import (
 	ansiblev1 "github.com/ansible-operator/pkg/apis/ansible/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	kapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -107,7 +108,7 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	}
 
 	r.Validate(ap)
-	
+
 	// Define a new Job object
 	job := AnsiblePlaybookRunJob(apr)
 
@@ -142,8 +143,7 @@ func (r *ReconcileANsiblePlaybookRun) Validate(cr *ansiblev1.AnsiblePlaybook) er
 	repoURL := cr.Spec.RepositoryURL
 
 	if repoType == "git"{
-	    if repoURL == “http” || repoURL == “https” || repoURL == ”ssh”
-             {
+	    if repoURL == "http" || repoURL == "https" || repoURL == "ssh"{
                  return reconcile.Result{}, nil
              }
              reqLogger.Info("FAILED")
@@ -249,5 +249,6 @@ func newPodForCR(cr *ansiblev1.AnsiblePlaybookRun) *corev1.Job {
 						},
 				},
 		    },
-		},			
+		},			 
+    },
 }

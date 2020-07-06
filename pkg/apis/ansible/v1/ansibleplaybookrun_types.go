@@ -1,7 +1,21 @@
 package v1
 
 import (
+	"context"
+
+	kapi "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	Pending   = "Pending"
+	Preparing = "Preparing"
+	Active    = "Active"
+	Cleaning  = "Cleaning"
+	Finished  = "Finished"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -12,10 +26,10 @@ type AnsiblePlaybookRunSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-        AnsiblePlaybook     string     `json:"ansiblePlaybook,omitempty"`
-	Inventory           string     `json:"inventory,omitempty"`
-	HostCredential      string     `json:"hostCredential,omitempty"`
-	ExtraVars           string     `json:"extraVars,omitempty"`
+	AnsiblePlaybookRef *kapi.ObjectReference `json:"ansiblePlaybook,omitempty"`
+	Inventory          string                `json:"inventory,omitempty"`
+	HostCredential     string                `json:"hostCredential,omitempty"`
+	ExtraVars          string                `json:"extraVars,omitempty"`
 }
 
 // AnsiblePlaybookRunStatus defines the observed state of AnsiblePlaybookRun
@@ -23,7 +37,7 @@ type AnsiblePlaybookRunStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	Status             string      `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -50,4 +64,33 @@ type AnsiblePlaybookRunList struct {
 
 func init() {
 	SchemeBuilder.Register(&AnsiblePlaybookRun{}, &AnsiblePlaybookRunList{})
+}
+
+// Get a referenced MigCluster.
+// Returns `nil` when the reference cannot be resolved.
+func GetAnsiblePlaybook(client k8sclient.Client, ref *kapi.ObjectReference) (*AnsiblePlaybook, error) {
+	if ref == nil {
+		return nil, nil
+	}
+	object := AnsiblePlaybook{}
+	err := client.Get(
+		context.TODO(),
+		types.NamespacedName{
+			Namespace: ref.Namespace,
+			Name:      ref.Name,
+		},
+		&object)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return &object, err
+}
+
+type AnsibleResources struct {
+	AnsiblePlaybook *AnsiblePlaybook
 }
