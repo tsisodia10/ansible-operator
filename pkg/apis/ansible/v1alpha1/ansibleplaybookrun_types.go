@@ -19,6 +19,7 @@ const (
 	Active    = "Active"
 	Cleaning  = "Cleaning"
 	Finished  = "Finished"
+	Failed    = "Failed"
 )
 
 // AnsiblePlaybookRunSpec defines the desired state of AnsiblePlaybookRun

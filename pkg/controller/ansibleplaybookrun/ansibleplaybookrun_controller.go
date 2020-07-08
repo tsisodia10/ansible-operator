@@ -103,8 +103,20 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
+	err := r.client.Get(context.TODO(), request.NamespacedName, apr.Spec.AnsiblePlaybookRef)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
 	// Define a new Job object
-	job := newAnsiblePlaybookRunJob(apr, ap)
+	job := JobSpec(apr, ap)
 
 	// Set AnsiblePlaybookRun instance as the owner and controller
 	if err := controllerutil.SetControllerReference(apr, job, r.scheme); err != nil {
@@ -118,10 +130,12 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		reqLogger.Info("Creating a new Job", "Job.Namespace", job.Namespace, "Job.Name", job.Name)
 		err = r.client.Create(context.TODO(), job)
 		if err != nil {
+			reqLogger.Info("Failed")
 			return reconcile.Result{}, err
 		}
 
 		// Job created successfully - don't requeue
+		reqLogger.Info("Success")
 		return reconcile.Result{}, nil
 	}
 
@@ -132,7 +146,7 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newAnsiblePlaybookRunJob(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.AnsiblePlaybook) *batch.Job {
+func JobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.AnsiblePlaybook) *batch.Job {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
