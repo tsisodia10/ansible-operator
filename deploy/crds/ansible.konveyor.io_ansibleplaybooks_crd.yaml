@@ -31,8 +31,6 @@ spec:
           spec:
             description: AnsiblePlaybookSpec defines the desired state of AnsiblePlaybook
             properties:
-              playbookContent:
-                type: string
               playbookName:
                 type: string
               repository:
