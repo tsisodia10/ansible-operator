@@ -1,0 +1,7 @@
+apiVersion: ansible.konveyor.io/v1alpha1
+kind: AnsiblePlaybookRun
+metadata:
+  name: example-ansibleplaybookrun
+spec:
+  # Add fields here
+  size: 3
