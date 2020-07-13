@@ -217,50 +217,52 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 					},
 					RestartPolicy: corev1.RestartPolicyNever,
 					Volumes: []corev1.Volume{
-						Name: "extravars-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "extravars-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
-					},
-					corev1.Volume{
-						Name: "password-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "password-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
-					},
-					corev1.Volume{
-						Name: "sshkey-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "sshkey-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
-					},
-					corev1.Volume{
-						Name: "inventory-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "inventory-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
-					},
-					corev1.Volume{
-						Name: "projectvars-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "projectvars-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
-					},
-					corev1.Volume{
-						Name: "projectmeta-volume",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/data",
+						corev1.Volume{
+							Name: "projectmeta-volume",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/data",
+								},
 							},
 						},
 					},
