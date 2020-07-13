@@ -107,13 +107,13 @@ func (r *ReconcileAnsiblePlaybook) Reconcile(request reconcile.Request) (reconci
 		reqLogger.Info("FAILED")
 	}
 
-	// if ap.Spec.PlaybookName == "" {
-	// 	ap.Spec.PlaybookName = "playbook.yaml"
-	// }
+	if ap.Spec.PlaybookName == "" {
+		ap.Spec.PlaybookName = "playbook.yaml"
+	}
 
-	// if repoType == "" {
-	// 	repoType = "local"
-	// }
+	if repoType == "" {
+		repoType = "local"
+	}
 
 	return reconcile.Result{}, err
 
