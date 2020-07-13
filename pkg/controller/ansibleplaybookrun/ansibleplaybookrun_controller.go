@@ -103,20 +103,20 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	err := r.client.Get(context.TODO(), request.NamespacedName, apr.Spec.AnsiblePlaybookRef)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
-	}
+	// err = r.client.Get(context.TODO(), request.NamespacedName, ap)
+	// if err != nil {
+	// 	if errors.IsNotFound(err) {
+	// 		// Request object not found, could have been deleted after reconcile request.
+	// 		// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+	// 		// Return and don't requeue
+	// 		return reconcile.Result{}, nil
+	// 	}
+	// 	// Error reading the object - requeue the request.
+	// 	return reconcile.Result{}, err
+	// }
 
 	// Define a new Job object
-	job := JobSpec(apr, ap)
+	job := BuildJobSpec(apr, ap)
 
 	// Set AnsiblePlaybookRun instance as the owner and controller
 	if err := controllerutil.SetControllerReference(apr, job, r.scheme); err != nil {
@@ -125,140 +125,143 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 
 	// Check if this Job already exists
 	found := &batch.Job{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: job.Name, Namespace: job.Namespace}, found)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: apr.Name, Namespace: apr.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Job", "Job.Namespace", job.Namespace, "Job.Name", job.Name)
+		reqLogger.Info("Creating a new Job", "Job.Namespace", apr.Namespace, "Job.Name", apr.Name)
 		err = r.client.Create(context.TODO(), job)
 		if err != nil {
-			reqLogger.Info("Failed")
+			reqLogger.Info("Failed creating job")
 			return reconcile.Result{}, err
 		}
 
 		// Job created successfully - don't requeue
-		reqLogger.Info("Success")
+		reqLogger.Info("Success: Job created")
 		return reconcile.Result{}, nil
 	}
 
-	// Job already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Job already exists", "Job.Namespace", found.Namespace, "Job.Name", found.Name)
-	return reconcile.Result{}, nil
+	// Job already exists - requeue
+	reqLogger.Info("Reconcile requeue: Job already exists", "Job.Namespace", found.Namespace, "Job.Name", found.Name)
+	return reconcile.Result{Requeue: true}, nil
 
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func JobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.AnsiblePlaybook) *batch.Job {
+func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.AnsiblePlaybook) *batch.Job {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
+
 	return &batch.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name + "-job",
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "ansible-runner",
-					Image:   "quay.io/tsisodia/ansible-runner",
-					Command: []string{"sleep", "3600"},
-					// Env: []corev1.EnvVar{
-					// 	corev1.EnvVar{
-					// 		Name:  "ANSIBLEPLAYBOOK_NAME",
-					// 		Value: cr1.Spec.PlaybookName,
-					// 	},
-					// 	corev1.EnvVar{
-					// 		Name:  "REPOSITORY_TYPE",
-					// 		Value: cr1.Spec.RepositoryType,
-					// 	},
-					// 	corev1.EnvVar{
-					// 		Name:  "REPOSITORY_URL",
-					// 		Value: cr.Spec.RepositoryURL,
-					// 	},
-					// 	corev1.EnvVar{
-					// 		Name:  "INVENTORY",
-					// 		Value: cr.Spec.Inventory,
-					// 	},
-					// 	corev1.EnvVar{
-					// 		Name:  "HOST_CREDENTIAL",
-					// 		Value: cr.Spec.HostCredential,
-					// 	},
-					// 	},
-
-					VolumeMounts: []corev1.VolumeMount{
-						corev1.VolumeMount{
-							Name:      "extravars-volume",
-							MountPath: "/runner/env/extravars",
-						},
-						corev1.VolumeMount{
-							Name:      "password-volume",
-							MountPath: "/runner/env/password",
-						},
-						corev1.VolumeMount{
-							Name:      "sshkey-volume",
-							MountPath: "/runner/env/ssh_key",
-						},
-						corev1.VolumeMount{
-							Name:      "inventory-volume",
-							MountPath: "/runner/inventory/hosts",
-						},
-						corev1.VolumeMount{
-							Name:      "projectvars-volume",
-							MountPath: "/runner/project/roles/testrole/vars",
-						},
-						corev1.VolumeMount{
-							Name:      "projectmeta-volume",
-							MountPath: "/runner/project/roles/testrole/meta",
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				corev1.Volume{
-					Name: "extravars-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+		Spec: batch.JobSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:    "ansible-runner",
+							Image:   "quay.io/tsisodia/ansible-runner",
+							Command: []string{"sleep", "3600"},
+							Env: []corev1.EnvVar{
+								corev1.EnvVar{
+									Name:  "ANSIBLEPLAYBOOK_NAME",
+									Value: cr1.Spec.PlaybookName,
+								},
+								corev1.EnvVar{
+									Name:  "REPOSITORY_TYPE",
+									Value: cr1.Spec.RepositoryType,
+								},
+								corev1.EnvVar{
+									Name:  "REPOSITORY_URL",
+									Value: cr1.Spec.RepositoryURL,
+								},
+								corev1.EnvVar{
+									Name:  "INVENTORY",
+									Value: cr.Spec.Inventory,
+								},
+								corev1.EnvVar{
+									Name:  "HOST_CREDENTIAL",
+									Value: cr.Spec.HostCredential,
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								corev1.VolumeMount{
+									Name:      "extravars-volume",
+									MountPath: "/runner/env/extravars",
+								},
+								corev1.VolumeMount{
+									Name:      "password-volume",
+									MountPath: "/runner/env/password",
+								},
+								corev1.VolumeMount{
+									Name:      "sshkey-volume",
+									MountPath: "/runner/env/ssh_key",
+								},
+								corev1.VolumeMount{
+									Name:      "inventory-volume",
+									MountPath: "/runner/inventory/hosts",
+								},
+								corev1.VolumeMount{
+									Name:      "projectvars-volume",
+									MountPath: "/runner/project/roles/testrole/vars",
+								},
+								corev1.VolumeMount{
+									Name:      "projectmeta-volume",
+									MountPath: "/runner/project/roles/testrole/meta",
+								},
+							},
 						},
 					},
-				},
-				corev1.Volume{
-					Name: "password-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+					RestartPolicy: corev1.RestartPolicyNever,
+					Volumes: []corev1.Volume{
+						Name: "extravars-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
 						},
 					},
-				},
-				corev1.Volume{
-					Name: "sshkey-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+					corev1.Volume{
+						Name: "password-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
 						},
 					},
-				},
-				corev1.Volume{
-					Name: "inventory-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+					corev1.Volume{
+						Name: "sshkey-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
 						},
 					},
-				},
-				corev1.Volume{
-					Name: "projectvars-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+					corev1.Volume{
+						Name: "inventory-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
 						},
 					},
-				},
-				corev1.Volume{
-					Name: "projectmeta-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data",
+					corev1.Volume{
+						Name: "projectvars-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
+						},
+					},
+					corev1.Volume{
+						Name: "projectmeta-volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
 						},
 					},
 				},

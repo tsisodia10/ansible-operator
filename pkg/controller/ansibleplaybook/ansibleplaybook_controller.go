@@ -84,8 +84,8 @@ func (r *ReconcileAnsiblePlaybook) Reconcile(request reconcile.Request) (reconci
 	reqLogger.Info("Reconciling AnsiblePlaybook")
 
 	// Fetch the AnsiblePlaybook instance
-	instance := &ansiblev1alpha1.AnsiblePlaybook{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	ap := &ansiblev1alpha1.AnsiblePlaybook{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, ap)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -97,15 +97,24 @@ func (r *ReconcileAnsiblePlaybook) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	repoType := instance.Spec.RepositoryType
-	repoURL := instance.Spec.RepositoryURL
+	repoType := ap.Spec.RepositoryType
+	repoURL := ap.Spec.RepositoryURL
 
 	if repoType == "git" {
-		if repoURL == "http" || repoURL == "https" || repoURL == "http" {
+		if repoURL == "http" || repoURL == "https" || repoURL == "ssh" {
 			return reconcile.Result{}, nil
 		}
 		reqLogger.Info("FAILED")
 	}
+
+	// if ap.Spec.PlaybookName == "" {
+	// 	ap.Spec.PlaybookName = "playbook.yaml"
+	// }
+
+	// if repoType == "" {
+	// 	repoType = "local"
+	// }
+
 	return reconcile.Result{}, err
 
 	// // Define a new Pod object
