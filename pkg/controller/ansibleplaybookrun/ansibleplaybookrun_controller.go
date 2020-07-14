@@ -97,23 +97,29 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		apr.Status.Status = "Unavailable"
+		err = r.client.Status().Update(context.TODO(), apr)
 		return reconcile.Result{}, err
 	}
 
-	// err = r.client.Get(context.TODO(), request.NamespacedName, ap)
-	// if err != nil {
-	// 	if errors.IsNotFound(err) {
-	// 		// Request object not found, could have been deleted after reconcile request.
-	// 		// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-	// 		// Return and don't requeue
-	// 		return reconcile.Result{}, nil
-	// 	}
-	// 	// Error reading the object - requeue the request.
-	// 	return reconcile.Result{}, err
-	// }
+	err = r.client.Get(context.TODO(), apr.Spec.AnsiblePlaybookRef, ap)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		apr.Status.Status = "Unavailable"
+		err = r.client.Status().Update(context.TODO(), apr)
+		return reconcile.Result{}, err
+	}
 
 	// Define a new Job object
 	job := BuildJobSpec(apr, ap)
@@ -130,8 +136,9 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		reqLogger.Info("Creating a new Job", "Job.Namespace", apr.Namespace, "Job.Name", apr.Name)
 		err = r.client.Create(context.TODO(), job)
 		if err != nil {
-			reqLogger.Info("Failed creating job")
-			return reconcile.Result{}, err
+			apr.Status.Status = "Finished"
+			reqLogger.Info("Status: ", apr.Status)
+			return reconcile.Result{}, nil
 		}
 
 		// Job created successfully - don't requeue
@@ -142,6 +149,22 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	// Job already exists - requeue
 	reqLogger.Info("Reconcile requeue: Job already exists", "Job.Namespace", found.Namespace, "Job.Name", found.Name)
 	return reconcile.Result{Requeue: true}, nil
+
+	// // Check if this Job already exists
+	// found := &batch.Job{}
+	// err = r.client.Get(context.TODO(), types.NamespacedName{Name: apr.Name, Namespace: apr.Namespace}, found)
+	// if err != nil && errors.IsNotFound(err) {
+	// 	reqLogger.Info("Creating a new Job", "Job.Namespace", apr.Namespace, "Job.Name", apr.Name)
+	// 	err = r.client.Create(context.TODO(), job)
+	// 	if err != nil {
+	// 		reqLogger.Info("Failed creating job")
+	// 		return reconcile.Result{}, err
+	// 	}
+
+	// 	// Job created successfully - don't requeue
+	// 	reqLogger.Info("Success: Job created")
+	// 	return reconcile.Result{}, nil
+	// }
 
 }
 
