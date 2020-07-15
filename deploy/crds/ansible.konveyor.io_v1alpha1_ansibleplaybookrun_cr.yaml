@@ -4,4 +4,10 @@ metadata:
   name: example-ansibleplaybookrun
 spec:
   # Add fields here
-  size: 3
+  ansiblePlaybook: 
+    name: ansible-operator-local
+    namespace: demo-test
+  inventory: hosts
+status: 
+  status: pending
+    

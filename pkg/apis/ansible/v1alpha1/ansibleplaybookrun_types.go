@@ -66,18 +66,16 @@ func init() {
 	SchemeBuilder.Register(&AnsiblePlaybookRun{}, &AnsiblePlaybookRunList{})
 }
 
-// Get a referenced MigCluster.
-// Returns `nil` when the reference cannot be resolved.
-func GetAnsiblePlaybook(client k8sclient.Client, ref *kapi.ObjectReference) (*AnsiblePlaybook, error) {
-	if ref == nil {
+func (r *AnsiblePlaybookRun) GetAnsiblePlaybook(client k8sclient.Client) (*AnsiblePlaybook, error) {
+	if r == nil {
 		return nil, nil
 	}
 	object := AnsiblePlaybook{}
 	err := client.Get(
 		context.TODO(),
 		types.NamespacedName{
-			Namespace: ref.Namespace,
-			Name:      ref.Name,
+			Namespace: r.Spec.AnsiblePlaybookRef.Namespace,
+			Name:      r.Spec.AnsiblePlaybookRef.Name,
 		},
 		&object)
 	if err != nil {
@@ -87,6 +85,5 @@ func GetAnsiblePlaybook(client k8sclient.Client, ref *kapi.ObjectReference) (*An
 			return nil, err
 		}
 	}
-
 	return &object, err
 }
