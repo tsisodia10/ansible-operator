@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	kapi "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -66,16 +67,20 @@ func init() {
 	SchemeBuilder.Register(&AnsiblePlaybookRun{}, &AnsiblePlaybookRunList{})
 }
 
-func (r *AnsiblePlaybookRun) GetAnsiblePlaybook(client k8sclient.Client) (*AnsiblePlaybook, error) {
-	if r == nil {
+func (apr *AnsiblePlaybookRun) GetAnsiblePlaybook(client k8sclient.Client) (*AnsiblePlaybook, error) {
+
+	fmt.Printf("%+v\n", apr)
+	if apr == nil {
 		return nil, nil
 	}
 	object := AnsiblePlaybook{}
+	fmt.Printf("%+s\n", apr.Spec.AnsiblePlaybookRef.Namespace)
+	fmt.Printf("%+s\n", apr.Spec.AnsiblePlaybookRef.Name)
 	err := client.Get(
 		context.TODO(),
 		types.NamespacedName{
-			Namespace: r.Spec.AnsiblePlaybookRef.Namespace,
-			Name:      r.Spec.AnsiblePlaybookRef.Name,
+			Namespace: apr.Spec.AnsiblePlaybookRef.Namespace,
+			Name:      apr.Spec.AnsiblePlaybookRef.Name,
 		},
 		&object)
 	if err != nil {

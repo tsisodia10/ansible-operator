@@ -2,6 +2,7 @@ package ansibleplaybookrun
 
 import (
 	"context"
+	"fmt"
 
 	ansiblev1alpha1 "github.com/ansible-operator/pkg/apis/ansible/v1alpha1"
 	batch "k8s.io/api/batch/v1"
@@ -92,6 +93,9 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	apr := &ansiblev1alpha1.AnsiblePlaybookRun{}
 
 	err := r.client.Get(context.TODO(), request.NamespacedName, apr)
+	//reqLogger.Info("Ansible Playbook Run", apr)
+	//reqLogger.Info("%+v\n", apr)
+	fmt.Printf("%+v\n", apr)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -106,7 +110,9 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
+	fmt.Printf("%+v\n", apr)
 	ap, err = apr.GetAnsiblePlaybook(r.client)
+	fmt.Printf("%+v\n", ap)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -117,6 +123,7 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
+	fmt.Printf("%+v\n", ap)
 	// Define a new Job object
 	job := BuildJobSpec(apr, ap)
 
@@ -241,7 +248,11 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 						corev1.Volume{
 							Name: "inventory-volume",
 							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "configMap",
+									},
+								},
 							},
 						},
 						corev1.Volume{

@@ -5,9 +5,9 @@ metadata:
 spec:
   # Add fields here
   ansiblePlaybook: 
-    name: ansible-operator-local
+    name: example-ansibleplaybook
     namespace: demo-test
-  inventory: hosts
+  inventory: configMap.yaml  
 status: 
   status: pending
     

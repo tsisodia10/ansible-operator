@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: json-test
+data:
+  sample.json: |-
+    {"all": {"hosts": "localhost"}}
