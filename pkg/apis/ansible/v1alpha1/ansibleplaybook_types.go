@@ -49,3 +49,24 @@ type AnsiblePlaybookList struct {
 func init() {
 	SchemeBuilder.Register(&AnsiblePlaybook{}, &AnsiblePlaybookList{})
 }
+
+func (ap *AnsiblePlaybook) Initialize() {
+	spec := &ap.Spec
+
+	if spec.PlaybookName == "" {
+		spec.PlaybookName = "playbook.yaml"
+	}
+
+	if spec.RepositoryType == "" {
+		spec.RepositoryType = "local"
+	}
+}
+
+// func (ap *AnsiblePlaybook) Validate() {
+// 	spec := &ap.Spec
+// 	errs := []string{}
+
+// 	if spec.RepositoryURL == "http" || spec.RepositoryURL == "https" || spec.RepositoryURL == "ssh" {
+// 		errs = append(errs, "RepositoryURL is invalid")
+// 	}
+// }

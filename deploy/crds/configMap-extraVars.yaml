@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ev-configmap
+  labels: 
+    app: ev-configmap
+data:
+  repo_type: '{"repositoryType": "local"}'
+  repo_url: '{"repositoryUrl": "git"}'
+  playbook_name: '{"playbookName": "playbook.yaml"}'

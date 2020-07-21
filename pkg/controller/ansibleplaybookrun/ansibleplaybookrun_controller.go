@@ -93,15 +93,9 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	apr := &ansiblev1alpha1.AnsiblePlaybookRun{}
 
 	err := r.client.Get(context.TODO(), request.NamespacedName, apr)
-	//reqLogger.Info("Ansible Playbook Run", apr)
-	//reqLogger.Info("%+v\n", apr)
-	fmt.Printf("%+v\n", apr)
+
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
@@ -110,9 +104,8 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	fmt.Printf("%+v\n", apr)
 	ap, err = apr.GetAnsiblePlaybook(r.client)
-	fmt.Printf("%+v\n", ap)
+
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -123,7 +116,8 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	fmt.Printf("%+v\n", ap)
+	ap.Initialize()
+
 	// Define a new Job object
 	job := BuildJobSpec(apr, ap)
 
@@ -138,9 +132,8 @@ func (r *ReconcileAnsiblePlaybookRun) Reconcile(request reconcile.Request) (reco
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Job", "Job.Namespace", apr.Namespace, "Job.Name", apr.Name)
 		err = r.client.Create(context.TODO(), job)
+		fmt.Printf("Error: %v", err)
 		if err != nil {
-			apr.Status.Status = "Finished"
-			reqLogger.Info("Status: ", apr.Status)
 			return reconcile.Result{}, nil
 		}
 
@@ -161,7 +154,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 		"app": cr.Name,
 	}
 
-	return &batch.Job{
+	job := &batch.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name + "-job",
 			Namespace: cr.Namespace,
@@ -199,16 +192,12 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								corev1.VolumeMount{
-									Name:      "extravars-volume",
+									Name:      "extravar-volume",
 									MountPath: "/runner/env/extravars",
 								},
 								corev1.VolumeMount{
-									Name:      "password-volume",
+									Name:      "credential-volume",
 									MountPath: "/runner/env/password",
-								},
-								corev1.VolumeMount{
-									Name:      "sshkey-volume",
-									MountPath: "/runner/env/ssh_key",
 								},
 								corev1.VolumeMount{
 									Name:      "inventory-volume",
@@ -216,7 +205,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 								},
 								corev1.VolumeMount{
 									Name:      "projectvars-volume",
-									MountPath: "/runner/project/roles/testrole/vars",
+									MountPath: "/runner/project/roles/testrole",
 								},
 								corev1.VolumeMount{
 									Name:      "projectmeta-volume",
@@ -227,34 +216,6 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 					},
 					RestartPolicy: corev1.RestartPolicyNever,
 					Volumes: []corev1.Volume{
-						corev1.Volume{
-							Name: "extravars-volume",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
-						corev1.Volume{
-							Name: "password-volume",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
-						corev1.Volume{
-							Name: "sshkey-volume",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
-						corev1.Volume{
-							Name: "inventory-volume",
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "configMap",
-									},
-								},
-							},
-						},
 						corev1.Volume{
 							Name: "projectvars-volume",
 							VolumeSource: corev1.VolumeSource{
@@ -273,4 +234,68 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 		},
 	}
 
+	if cr.Spec.Inventory == "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "inventory-volume",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			})
+	}
+	if cr.Spec.Inventory != "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "inventory-volume",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "configMap-inventory"},
+					},
+				},
+			})
+	}
+
+	if cr1.Spec.RepositoryType == "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "extravar-volume",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			})
+	}
+	if cr1.Spec.RepositoryType != "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "extravar-volume",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "ev-configmap"},
+					},
+				},
+			})
+	}
+
+	if cr.Spec.HostCredential == "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "credential-volume",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			})
+	}
+	if cr.Spec.HostCredential != "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "credential-volume",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: "secret-password",
+					},
+				},
+			})
+	}
+
+	return job
 }
