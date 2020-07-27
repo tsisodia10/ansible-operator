@@ -1,8 +1,9 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM ansible/ansible-runner
 
 ENV OPERATOR=/usr/local/bin/ansible-operator \
     USER_UID=1001 \
     USER_NAME=ansible-operator
+
 
 # install operator binary
 COPY build/_output/bin/ansible-operator ${OPERATOR}
