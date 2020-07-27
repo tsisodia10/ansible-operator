@@ -166,7 +166,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 					Containers: []corev1.Container{
 						{
 							Name:    "ansible-runner",
-							Image:   "quay.io/tsisodia/ansible-runner",
+							Image:   "ansible/ansible-runner",
 							Command: []string{"sleep", "3600"},
 							Env: []corev1.EnvVar{
 								corev1.EnvVar{
