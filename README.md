@@ -62,7 +62,7 @@ Let's begin by creating a new project called operator :
 oc new-project operator
 ```
 
-Let's now create a new directory in our $GOPATH/src/ directory:
+Let's now create a new directory in our `$GOPATH/src/` directory:
 
 ```
 mkdir -p $GOPATH/src/github.com/redhat/
@@ -87,7 +87,7 @@ cd podset-operator
 ```
 
 ### Adding a new Custom API
-Add two new Custom Resource Definition(CRD) APIs called AnsiblePlaybook and AnsiblePlaybookRun, with APIVersion ansible.konveyor.io/v1alpha1 and Kind `AnsiblePlaybook` and `AnsiblePlaybookRun` :
+Add two new Custom Resource Definition(CRD) APIs called `AnsiblePlaybook` and `AnsiblePlaybookRun`, with APIVersion ansible.konveyor.io/v1alpha1 and Kind `AnsiblePlaybook` and `AnsiblePlaybookRun` :
 ```
 operator-sdk add api --api-version=ansible.konveyor.io/v1alpha1 --kind=AnsiblePLaybook
 ```
@@ -108,7 +108,10 @@ cat deploy/crds/app.example.com_ansibleplaybook_crd.yaml
 ```
 
 ### Defining the Spec and Status
-Modify the AnsiblePlaybookRunSpec and AnsiblePlaybookRunStatus of the AnsiblePlaybook Custom Resource(CR) at go/src/github.com/redhat/ansible-operator/pkg/apis/app/v1alpha1/ansibleplaybookrun_types.go
+Modify the AnsiblePlaybookRunSpec and AnsiblePlaybookRunStatus of the AnsiblePlaybook Custom Resource(CR) at 
+```
+go/src/github.com/redhat/ansible-operator/pkg/apis/app/v1alpha1/ansibleplaybookrun_types.go
+```
 Do the same woth AnsiblePlaybook API
 It should look like the file below:
 ```
@@ -218,7 +221,7 @@ Observe the CRD now reflects the spec.replicas and status.podNames OpenAPI v3 sc
 cat deploy/crds/ansible.konveyor.io_ansibleplaybook_crd.yaml
 ```
 
-Deploy your AnsiblePLaybook Custom Resource Definition to the live OpenShift Cluster:
+Deploy your `AnsiblePlaybook` Custom Resource Definition to the live OpenShift Cluster:
 ```
 oc create -f deploy/crds/ansible.konveyor.io_ansibleplaybook_crd.yaml
 ```
@@ -229,7 +232,7 @@ oc get crd ansibleplaybook.ansible.konveyor.io -o yaml
 ```
 
 ### Adding a new Controller
-Add a new Controller to the project that will watch and reconcile the AnsiblePlaybookRun resource:
+Add a new Controller to the project that will watch and reconcile the `AnsiblePlaybookRun` resource:
 ```
 operator-sdk add controller --api-version=ansible.konveyor.io/v1alpha1 --kind=AnsiblePlaybookRun
 ```
