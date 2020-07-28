@@ -112,7 +112,7 @@ Modify the AnsiblePlaybookRunSpec and AnsiblePlaybookRunStatus of the AnsiblePla
 ```
 go/src/github.com/redhat/ansible-operator/pkg/apis/app/v1alpha1/ansibleplaybookrun_types.go
 ```
-Do the same woth AnsiblePlaybook API
+Do the same with AnsiblePlaybook API
 It should look like the file below:
 ```
 package v1alpha1
