@@ -243,7 +243,7 @@ go/src/github.com/redhat/ansible-operator/pkg/controller/ansibleplaybookrun/ansi
 ```
 
 ### Customize the Operator Logic
-Modify the PodSet controller logic at 
+Modify the AnsiblePlaybookRun controller logic at 
 ```
 go/src/github.com/redhat/ansible-operator/pkg/controller/ansibleplaybookrun/ansibleplaybookrun_controller.go
 ```
