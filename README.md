@@ -52,3 +52,42 @@ Ideally the Status of the CR will contain at least:
 
 - State: pending, preparing, active, cleaning, finished
 - Message: human readable status to display in the UI (Ansible task name)
+
+## Building Operators
+
+### Creating a new Project
+Let's begin by creating a new project called operator : 
+
+```
+oc new-project operator
+```
+
+Let's now create a new directory in our $GOPATH/src/ directory:
+
+```
+mkdir -p $GOPATH/src/github.com/redhat/
+```
+
+Navigate to the directory :
+
+```
+cd $GOPATH/src/github.com/redhat/
+```
+
+Create a new Go-based Operator SDK project for the AnsiblePlaybook:
+
+```
+operator-sdk new podset-operator --type=go
+```
+
+Navigate to the project root:
+
+```
+cd podset-operator
+```
+
+### Adding a new Custom API
+Add a new Custom Resource Definition(CRD) API called AnsiblePlaybook, with APIVersion ansible.konveyor.io/v1alpha1 and Kind AnsiblePlaybook:
+```
+operator-sdk add api --api-version=ansible.konveyor.io/v1alpha1 --kind=AnsiblePLaybook
+```
