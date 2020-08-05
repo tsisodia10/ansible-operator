@@ -26,11 +26,6 @@ enable the respective modules. Because we will interact with VMware, RHV and may
 OpenStack, we will have to extend this image to ship the required libraries.
 
 
-## Installation
-You can pull the `AnsibleRunner Operator` image from -
-```
-docker pull quay.io/tsisodia/ansiblerunner-operator
-```
 ## Custom Resources
 
 ### AnsiblePlaybook 
@@ -60,6 +55,12 @@ Ideally the Status of the CR will contain at least:
 - Message: human readable status to display in the UI (Ansible task name)
 
 ## Building Operators
+
+### Installation
+You can pull the `AnsibleRunner Operator` image from -
+```
+docker pull quay.io/tsisodia/ansiblerunner-operator
+```
 
 ### Creating a new Project
 Let's begin by creating a new project called operator : 
