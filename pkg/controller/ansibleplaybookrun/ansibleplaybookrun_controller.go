@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	ansiblev1alpha1 "github.com/ansible-operator/pkg/apis/ansible/v1alpha1"
+	ansiblev1alpha1 "github.com/konveyor/ansible-operator/pkg/apis/ansible/v1alpha1"
 	batch "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -186,8 +186,12 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 									Value: cr.Spec.Inventory,
 								},
 								corev1.EnvVar{
-									Name:  "HOST_CREDENTIAL",
-									Value: cr.Spec.HostCredential,
+									Name:  "PASSWORD",
+									Value: cr.Spec.Password,
+								},
+								corev1.EnvVar{
+									Name:  "SSH_KEY",
+									Value: cr.Spec.SSHPrivateKey,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
@@ -196,7 +200,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 									MountPath: "/runner/env/extravars",
 								},
 								corev1.VolumeMount{
-									Name:      "credential-volume",
+									Name:      "password-volume",
 									MountPath: "/runner/env/password",
 								},
 								corev1.VolumeMount{
@@ -210,6 +214,14 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 								corev1.VolumeMount{
 									Name:      "projectmeta-volume",
 									MountPath: "/runner/project/roles/testrole/meta",
+								},
+								corev1.VolumeMount{
+									Name:      "sshkey-volume",
+									MountPath: "/runner/env/sshkey",
+								},
+								corev1.VolumeMount{
+									Name:      "inventory-volume",
+									MountPath: "/runner/inventory/hosts",
 								},
 							},
 						},
@@ -255,7 +267,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 			})
 	}
 
-	if cr1.Spec.RepositoryType == "" {
+	if cr.Spec.ExtraVars == "" {
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
 			corev1.Volume{
 				Name: "extravar-volume",
@@ -264,7 +276,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 				},
 			})
 	}
-	if cr1.Spec.RepositoryType != "" {
+	if cr.Spec.ExtraVars != "" {
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
 			corev1.Volume{
 				Name: "extravar-volume",
@@ -276,19 +288,19 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 			})
 	}
 
-	if cr.Spec.HostCredential == "" {
+	if cr.Spec.Password == "" {
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
 			corev1.Volume{
-				Name: "credential-volume",
+				Name: "password-volume",
 				VolumeSource: corev1.VolumeSource{
 					EmptyDir: &corev1.EmptyDirVolumeSource{},
 				},
 			})
 	}
-	if cr.Spec.HostCredential != "" {
+	if cr.Spec.Password != "" {
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
 			corev1.Volume{
-				Name: "credential-volume",
+				Name: "password-volume",
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName: "secret-password",
@@ -297,5 +309,25 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 			})
 	}
 
+	if cr.Spec.SSHPrivateKey == "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "sshkey-volume",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			})
+	}
+	if cr.Spec.SSHPrivateKey != "" {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes,
+			corev1.Volume{
+				Name: "sshkey-volume",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: "secret-password",
+					},
+				},
+			})
+	}
 	return job
 }

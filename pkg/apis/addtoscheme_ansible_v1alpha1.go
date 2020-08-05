@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/ansible-operator/pkg/apis/ansible/v1alpha1"
+	"github.com/konveyor/ansible-operator/pkg/apis/ansible/v1alpha1"
 )
 
 func init() {

@@ -7,8 +7,7 @@ spec:
   ansiblePlaybook: 
     name: example-ansibleplaybook
     namespace: demo-test
-  inventory: '{"all": {"hosts": "localhost"}}'
-  hostCredential: '{"password": "b3BlcmF0b3I="}'
+    
 status: 
   status: pending
     
