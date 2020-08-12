@@ -54,205 +54,12 @@ Ideally the Status of the CR will contain at least:
 - State: pending, preparing, active, cleaning, finished
 - Message: human readable status to display in the UI (Ansible task name)
 
-## Building Operators
+## Running AnsibleRunner Operator
 
 ### Installation
 You can pull the `AnsibleRunner Operator` image from -
 ```
 docker pull quay.io/tsisodia/ansiblerunner-operator
-```
-
-### Creating a new Project
-Let's begin by creating a new project called operator : 
-
-```
-oc new-project operator
-```
-
-Let's now create a new directory in our `$GOPATH/src/` directory:
-
-```
-mkdir -p $GOPATH/src/github.com/redhat/
-```
-
-Navigate to the directory :
-
-```
-cd $GOPATH/src/github.com/redhat/
-```
-
-Create a new Go-based Operator SDK project for the AnsiblePlaybook:
-
-```
-operator-sdk new podset-operator --type=go
-```
-
-Navigate to the project root:
-
-```
-cd podset-operator
-```
-
-### Adding a new Custom API
-Add two new Custom Resource Definition(CRD) APIs called `AnsiblePlaybook` and `AnsiblePlaybookRun`, with APIVersion ansible.konveyor.io/v1alpha1 and Kind `AnsiblePlaybook` and `AnsiblePlaybookRun` :
-```
-operator-sdk add api --api-version=ansible.konveyor.io/v1alpha1 --kind=AnsiblePLaybook
-```
-
-This will scaffold the `AnsiblePlaybook` and `AnsiblePlaybookRun` resource API under pkg/apis/app/v1alpha1/....
-
-The Operator-SDK automatically creates the following manifests for you under the /deploy directory.
-
-Custom Resource Definition
-Custom Resource
-Service Account
-Role
-RoleBinding
-Deployment
-Inspect the Custom Resource Definition manifest:
-```
-cat deploy/crds/app.example.com_ansibleplaybook_crd.yaml
-```
-
-### Defining the Spec and Status
-Modify the AnsiblePlaybookRunSpec and AnsiblePlaybookRunStatus of the AnsiblePlaybook Custom Resource(CR) at 
-```
-go/src/github.com/redhat/ansible-operator/pkg/apis/app/v1alpha1/ansibleplaybookrun_types.go
-```
-Do the same with AnsiblePlaybook API
-It should look like the file below:
-```
-package v1alpha1
-
-import (
-	"context"
-
-	kapi "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-const (
-	Pending   = "Pending"
-	Preparing = "Preparing"
-	Active    = "Active"
-	Cleaning  = "Cleaning"
-	Finished  = "Finished"
-	Failed    = "Failed"
-)
-
-// AnsiblePlaybookRunSpec defines the desired state of AnsiblePlaybookRun
-type AnsiblePlaybookRunSpec struct {
-	AnsiblePlaybookRef *kapi.ObjectReference `json:"ansiblePlaybook,omitempty"`
-	Inventory          string                `json:"inventory,omitempty"`
-	HostCredential     string                `json:"hostCredential,omitempty"`
-}
-
-// AnsiblePlaybookRunStatus defines the observed state of AnsiblePlaybookRun
-type AnsiblePlaybookRunStatus struct {
-
-	Status string `json:"status,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// AnsiblePlaybookRun is the Schema for the ansibleplaybookruns API
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=ansibleplaybookruns,scope=Namespaced
-type AnsiblePlaybookRun struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   AnsiblePlaybookRunSpec   `json:"spec,omitempty"`
-	Status AnsiblePlaybookRunStatus `json:"status,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// AnsiblePlaybookRunList contains a list of AnsiblePlaybookRun
-type AnsiblePlaybookRunList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AnsiblePlaybookRun `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&AnsiblePlaybookRun{}, &AnsiblePlaybookRunList{})
-}
-
-func (apr *AnsiblePlaybookRun) GetAnsiblePlaybook(client k8sclient.Client) (*AnsiblePlaybook, error) {
-
-	//fmt.Printf("%+v\n", apr)
-	if apr == nil {
-		return nil, nil
-	}
-	object := AnsiblePlaybook{}
-	// fmt.Printf("%+s\n", apr.Spec.AnsiblePlaybookRef.Namespace)
-	// fmt.Printf("%+s\n", apr.Spec.AnsiblePlaybookRef.Name)
-	err := client.Get(
-		context.TODO(),
-		types.NamespacedName{
-			Namespace: apr.Spec.AnsiblePlaybookRef.Namespace,
-			Name:      apr.Spec.AnsiblePlaybookRef.Name,
-		},
-		&object)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-	return &object, err
-}
-
-```
-
-After modifying the `*_types.go` file, always run the following command to update the generated code for that resource type:
-```
-operator-sdk generate k8s
-```
-
-We can also automatically update the CRD with OpenAPI v3 schema details based off the newly updated `*_types.go` file:
-```
-operator-sdk generate crds
-```
-
-Observe the CRD now reflects the spec.replicas and status.podNames OpenAPI v3 schema validation in the spec:
-```
-cat deploy/crds/ansible.konveyor.io_ansibleplaybook_crd.yaml
-```
-
-Deploy your `AnsiblePlaybook` Custom Resource Definition to the live OpenShift Cluster:
-```
-oc create -f deploy/crds/ansible.konveyor.io_ansibleplaybook_crd.yaml
-```
-
-Confirm the CRD was successfully created:
-```
-oc get crd ansibleplaybook.ansible.konveyor.io -o yaml
-```
-
-### Adding a new Controller
-Add a new Controller to the project that will watch and reconcile the `AnsiblePlaybookRun` resource:
-```
-operator-sdk add controller --api-version=ansible.konveyor.io/v1alpha1 --kind=AnsiblePlaybookRun
-```
-
-This will scaffold a new Controller implementation under 
-```
-go/src/github.com/redhat/ansible-operator/pkg/controller/ansibleplaybookrun/ansibleplaybookrun_controller.go
-```
-
-### Customize the Operator Logic
-Modify the AnsiblePlaybookRun controller logic at 
-```
-go/src/github.com/redhat/ansible-operator/pkg/controller/ansibleplaybookrun/ansibleplaybookrun_controller.go
 ```
 
 ### Running the Operator locally
@@ -282,6 +89,28 @@ spec:
   hostCredential: '{"password": "b3BlcmF0b3I="}'
 status: 
   status: pending
+```
+Configuration data can be consumed in pods in a variety of ways. A ConfigMap can be used to:
+
+1. Populate the value of environment variables.
+2. Set command-line arguments in a container.
+3. Populate configuration files in a volume.
+4. Both users and system components may store configuration data in a ConfigMap.
+
+Ensure you create configMap and Secrets, for example - `password-secret.yaml`, `sshkey-secret.yaml`
+```
+oc create configmap <configmap_name> [options]
+```
+
+Example of ConfigMap with two environment variable:
+```apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: special-config 
+  namespace: default
+data:
+  special.how: very 
+  special.type: charm 
 ```
 
 Ensure you are currently scoped to the operator Namespace:
