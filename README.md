@@ -62,12 +62,6 @@ You can pull the `AnsibleRunner Operator` image from -
 docker pull quay.io/tsisodia/ansiblerunner-operator
 ```
 
-### Running the Operator locally
-Now we can test our logic by running our Operator outside the cluster. You can continue interacting with the OpenShift cluster by opening a new terminal window.
-```
-operator-sdk run local 
-```
-
 ### Creating the Custom Resource 
 In a new terminal, inspect the Custom Resource manifest:
 ```
@@ -126,4 +120,10 @@ oc create -f deploy/crds/ansible.konveyor.io_v1alpha1_ansibleplaybookrun_cr.yaml
 Verify the Ansible operator has created 1 job:
 ```
 oc get job
+```
+
+### Running the Operator locally
+Now we can test our logic by running our Operator outside the cluster. You can continue interacting with the OpenShift cluster by opening a new terminal window.
+```
+operator-sdk run local 
 ```
