@@ -116,6 +116,7 @@ Deploy your AnsiblePlaybookRun Custom Resource to the live OpenShift Cluster:
 ```
 oc create -f deploy/crds/ansible.konveyor.io_v1alpha1_ansibleplaybookrun_cr.yaml
 ```
+
 ### Running the Operator locally
 Now we can test our logic by running our Operator outside the cluster. You can continue interacting with the OpenShift cluster by opening a new terminal window.
 ```
@@ -123,7 +124,7 @@ operator-sdk run local
 ```
 
 
-Verify the Ansible operator has created 1 job:
+Verify the Ansible operator has created 1 job running Ansible Playbook :
 ```
 oc get job
 ```
