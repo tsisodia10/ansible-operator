@@ -56,10 +56,24 @@ Ideally the Status of the CR will contain at least:
 
 ## Running AnsibleRunner Operator
 
+### Pre Requisites 
+1. Install docker 
+```
+$ sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+```
+```
+$ sudo dnf install docker-ce-3:18.09.1-3.el7
+```
+2. Running OpenShift cluster
+
 ### Installation
-You can pull the `AnsibleRunner Operator` image from -
+1. You can pull the `AnsibleRunner Operator` image from -
 ```
 docker pull quay.io/tsisodia/ansiblerunner-operator
+```
+2. Clone git repository
+```
+https://github.com/tsisodia10/ansible-operator
 ```
 
 ### Creating the Custom Resource 
@@ -84,6 +98,7 @@ spec:
 status: 
   status: pending
 ```
+![](images/a.png)
 Configuration data can be consumed in pods in a variety of ways. A ConfigMap can be used to:
 
 1. Populate the value of environment variables.
@@ -128,4 +143,4 @@ Verify the Ansible operator has created 1 job running Ansible Playbook :
 ```
 oc get job
 ```
-
+Verify in the OpenShift dashboard if the resources are created 
