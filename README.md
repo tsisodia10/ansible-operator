@@ -98,7 +98,7 @@ spec:
 status: 
   status: pending
 ```
-![Screenshot](images/a.png)
+![Example](/images/a.png)
 Configuration data can be consumed in pods in a variety of ways. A ConfigMap can be used to:
 
 1. Populate the value of environment variables.
