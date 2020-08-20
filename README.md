@@ -25,7 +25,7 @@ For CAM, a hook-runner container image already exists and adds k8s and openshift
 enable the respective modules. Because we will interact with VMware, RHV and maybe
 OpenStack, we will have to extend this image to ship the required libraries.
 
-![Screenshot](a.png)
+![Screenshot](images/a.png)
 
 ## Custom Resources
 
@@ -99,6 +99,7 @@ spec:
 status: 
   status: pending
 ```
+![Custom Resource](images/b.png)
 
 Configuration data can be consumed in pods in a variety of ways. A ConfigMap can be used to:
 
@@ -138,10 +139,11 @@ Now we can test our logic by running our Operator outside the cluster. You can c
 ```
 operator-sdk run local 
 ```
-
+![Result](images/e.png)
 
 Verify the Ansible operator has created 1 job running Ansible Playbook :
 ```
 oc get job
 ```
 Verify in the OpenShift dashboard if the resources are created 
+![OpenShift Dashboard](images/d.png)
