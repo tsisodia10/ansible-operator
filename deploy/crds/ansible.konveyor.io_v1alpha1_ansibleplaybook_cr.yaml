@@ -4,5 +4,5 @@ metadata:
   name: example-ansibleplaybook
 spec:
   # Add fields here
-  extraVars: '{"playbookName": "playbook.yaml", "repositoryType": "local", "repositoryUrl": "git"}'
+  playbookName: example-ansibleplaybook.yaml
 

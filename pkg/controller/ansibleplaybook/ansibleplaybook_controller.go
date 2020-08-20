@@ -3,7 +3,7 @@ package ansibleplaybook
 import (
 	"context"
 
-	ansiblev1alpha1 "github.com/konveyor/ansible-operator/pkg/apis/ansible/v1alpha1"
+	ansiblev1alpha1 "github.com/ansible-operator/pkg/apis/ansible/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

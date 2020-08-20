@@ -205,7 +205,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 								},
 								corev1.VolumeMount{
 									Name:      "inventory-volume",
-									MountPath: "/runner/inventory/hosts",
+									MountPath: "/runner/inventory",
 								},
 								corev1.VolumeMount{
 									Name:      "projectvars-volume",
@@ -218,10 +218,6 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 								corev1.VolumeMount{
 									Name:      "sshkey-volume",
 									MountPath: "/runner/env/sshkey",
-								},
-								corev1.VolumeMount{
-									Name:      "inventory-volume",
-									MountPath: "/runner/inventory/hosts",
 								},
 							},
 						},
@@ -324,7 +320,7 @@ func BuildJobSpec(cr *ansiblev1alpha1.AnsiblePlaybookRun, cr1 *ansiblev1alpha1.A
 				Name: "sshkey-volume",
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
-						SecretName: "secret-password",
+						SecretName: "secret-sshkey",
 					},
 				},
 			})

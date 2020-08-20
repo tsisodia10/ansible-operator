@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/konveyor/ansible-operator/pkg/controller/ansibleplaybookrun"
+	"github.com/ansible-operator/pkg/controller/ansibleplaybookrun"
 )
 
 func init() {
