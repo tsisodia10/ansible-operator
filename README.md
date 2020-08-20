@@ -32,12 +32,8 @@ OpenStack, we will have to extend this image to ship the required libraries.
 ### AnsiblePlaybook 
 It represents an Ansible playbook specification to be run by the Ansible
 Playbook controller.
-- Repository
-- Type
-- URL
-- Repository credentials secret
-- Branch
-- Playbook content
+- Repository Type
+- Repository URL
 - Playbook file name
 
 ### AnsiblePlaybookRun 
