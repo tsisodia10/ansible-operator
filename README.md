@@ -148,3 +148,7 @@ oc get job
 ```
 Verify in the OpenShift dashboard if the resources are created 
 ![OpenShift Dashboard](images/d.png)
+
+### Resources
+Presentation : https://docs.google.com/presentation/d/1Y-_01OudbLUmuMF2abGp2gmr60WhpecN5DiBywkwmak/edit?usp=sharing
+Lightning Talk Video : https://drive.google.com/file/d/1nsRFYO7Yt6MGCZOwnP9AcJ8LlZTk2AGt/view?usp=sharing
