@@ -100,6 +100,7 @@ status:
   status: pending
 ```
 ![Custom Resource](images/b.png)
+![Custom Resource](images/c.png)
 
 Configuration data can be consumed in pods in a variety of ways. A ConfigMap can be used to:
 
