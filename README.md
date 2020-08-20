@@ -25,7 +25,7 @@ For CAM, a hook-runner container image already exists and adds k8s and openshift
 enable the respective modules. Because we will interact with VMware, RHV and maybe
 OpenStack, we will have to extend this image to ship the required libraries.
 
-![Screenshot](/a.png)
+![Screenshot](a.png)
 
 ## Custom Resources
 
