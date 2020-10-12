@@ -77,14 +77,14 @@ https://github.com/tsisodia10/ansible-operator
 
 We will use Golang to build the Operator. Install Golang, and then configure the following environment settings, as well as any other settings that you prefer:
 
-```$GOPATH=/your/preferred/path/
+```
+$GOPATH=/your/preferred/path/
 $GO111MODULE=on
 ```
 
 ### Next, verify the installation:
-
-#### Verify
 ```
+# Verify
 $ go version
 go version go1.13.3 linux/amd64
 ```
@@ -92,9 +92,8 @@ go version go1.13.3 linux/amd64
 ### Set up the SDK
 
 We will use the Kubernetes Operator SDK to build our Operator. Install the Operator SDK, then verify the installation:
-
-#### Verify
 ```
+# Verify
 $ operator-sdk version
 operator-sdk version: "v0.17.0", commit: "2fd7019f856cdb6f6618e2c3c80d15c3c79d1b6c", kubernetes version: "unknown", go version: "go1.13.10 linux/amd64"
 ```
